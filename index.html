@@ -4,24 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prestige — Contractor Onboarding</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#1B2A4A;--gold:#C9A84C;--cream:#F5F0E8;--white:#FFFFFF;
+  --navy:#0F3A5C;--navy-dark:#082337;--silver:#8FA8C0;--steel:#4C7094;--cream:#FAF8F5;--white:#FFFFFF;
   --gray-50:#F8F7F4;--gray-200:#D8D5CD;--gray-400:#9A9790;--gray-600:#5F5E5A;
   --red:#C0392B;--radius:10px;--radius-sm:6px;
 }
-body{font-family:'Inter',sans-serif;background:var(--gray-50);color:#222;min-height:100vh}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:#222;min-height:100vh}
 .header{background:var(--navy);padding:12px 20px;display:flex;align-items:center;gap:10px}
-.header-mark{width:32px;height:32px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--navy)}
-.header-text{color:white;font-size:13px;font-weight:600}
-.header-sub{color:rgba(255,255,255,.5);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+.header-mark{width:32px;height:32px;flex-shrink:0}
+.header-mark img{width:100%;height:100%;object-fit:contain}
+.header-text{color:white;font-family:'Bodoni Moda',serif;font-size:15px;font-weight:600}
+.header-sub{color:rgba(255,255,255,.55);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
 .page{max-width:620px;margin:0 auto;padding:24px 16px 48px}
 .card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:24px;margin-bottom:14px}
-.section-bar{background:var(--cream);border-left:3px solid var(--gold);padding:8px 12px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px}
+.section-bar{background:var(--cream);border-left:3px solid var(--silver);padding:8px 12px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px}
 .label{font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:4px;display:block}
-.label span{color:var(--gold)}
+.label span{color:var(--navy)}
 .input{font-family:'Inter',sans-serif;font-size:13px;width:100%;padding:9px 11px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--white);color:#222;outline:none;transition:border .15s}
 .input:focus{border-color:var(--navy)}
 .input.err{border-color:var(--red)}
@@ -35,26 +36,26 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .cb-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px}
 .cb-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#333;cursor:pointer}
 .cb-item input{accent-color:var(--navy);width:14px;height:14px;cursor:pointer}
-.eyebrow{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
-.card-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.eyebrow{font-size:10px;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.card-title{font-family:'Bodoni Moda',serif;font-size:19px;font-weight:600;color:var(--navy);margin-bottom:4px}
 .card-desc{font-size:12px;color:var(--gray-600);margin-bottom:16px;line-height:1.55}
 .progress-wrap{display:flex;gap:0;margin-bottom:20px;position:relative}
 .progress-wrap::before{content:'';position:absolute;top:10px;left:10px;right:10px;height:1px;background:var(--gray-200);z-index:0}
 .p-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;z-index:1}
 .p-dot{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--gray-200);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:var(--gray-400);transition:all .25s}
 .p-dot.active{background:var(--navy);border-color:var(--navy);color:white}
-.p-dot.done{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.p-dot.done{background:var(--silver);border-color:var(--silver);color:var(--navy-dark)}
 .p-label{font-size:9px;color:var(--gray-400);text-align:center}
 .p-label.active{color:var(--navy);font-weight:600}
 .nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px}
 .btn{font-family:'Inter',sans-serif;font-size:13px;font-weight:500;padding:9px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-.btn-primary{background:var(--navy);color:white}.btn-primary:hover{background:#243659}
-.btn-gold{background:var(--gold);color:var(--navy);font-weight:700}.btn-gold:hover{filter:brightness(1.05)}
+.btn-primary{background:var(--navy);color:white}.btn-primary:hover{background:var(--navy-dark)}
+.btn-dark{background:var(--navy-dark);color:white;font-weight:700}.btn-dark:hover{background:#051727}
 .btn-ghost{background:transparent;color:var(--gray-600);border:1px solid var(--gray-200)}.btn-ghost:hover{background:var(--gray-50)}
 .submit-success{text-align:center;padding:32px 16px}
 .icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
 .icon-uploading{background:#1A4D7A;color:white}
-.icon-success{background:var(--navy);color:var(--gold)}
+.icon-success{background:var(--navy);color:var(--silver)}
 .icon-error{background:#7A1A1A;color:white}
 .status-box{border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;line-height:1.5;margin-top:16px}
 .status-uploading{background:#EBF2FB;border:1px solid #A8C4E8;color:#1A4D7A}
@@ -66,7 +67,7 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 <body>
 
 <div class="header">
-  <div class="header-mark">P</div>
+  <div class="header-mark"><img src="brand/mark.png" alt="" width="32" height="32"></div>
   <div>
     <div class="header-text">Prestige Weddings &amp; Events</div>
     <div class="header-sub">Contractor Onboarding</div>
@@ -202,7 +203,7 @@ function renderNav(){
     ${S.step>0?`<button class="btn btn-ghost" onclick="goBack()">← Back</button>`:'<span></span>'}
     ${S.step<2
       ?`<button class="btn btn-primary" onclick="goNext()">Continue →</button>`
-      :`<button class="btn btn-gold" onclick="submitForm()">Submit to Prestige →</button>`}
+      :`<button class="btn btn-dark" onclick="submitForm()">Submit to Prestige →</button>`}
   </div>`;}
 
 function render(){
