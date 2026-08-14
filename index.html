@@ -148,7 +148,7 @@ function renderStep1(){
     </div>
     <div class="field">
       <label class="label" for="ssn">Social Security Number <span>*</span></label>
-      <input class="input${S.errors.ssn?' err':''}" id="ssn" type="text" placeholder="XXX-XX-XXXX" value="${S.data.ssn}" maxlength="11">
+      <input class="input${S.errors.ssn?' err':''}" id="ssn" type="text" inputmode="numeric" placeholder="XXX-XX-XXXX" value="${S.data.ssn}" maxlength="11" oninput="formatSSN(this)">
       ${S.errors.ssn?`<div class="hint err">${S.errors.ssn}</div>`:''}
     </div>
   </div>
@@ -243,6 +243,14 @@ function validate(){
     if(S.data.account!==S.data.confirmAccount)S.errors.confirmAccount="Account numbers don't match";
   }
   return Object.keys(S.errors).length===0;
+}
+function formatSSN(input){
+  const digits=input.value.replace(/\D/g,'').slice(0,9);
+  let out=digits;
+  if(digits.length>5)out=digits.slice(0,3)+'-'+digits.slice(3,5)+'-'+digits.slice(5);
+  else if(digits.length>3)out=digits.slice(0,3)+'-'+digits.slice(3);
+  input.value=out;
+  S.data.ssn=out;
 }
 function toggleSvc(s){const i=S.data.services.indexOf(s);if(i>=0)S.data.services.splice(i,1);else S.data.services.push(s);}
 function toggleEvt(s){const i=S.data.eventTypes.indexOf(s);if(i>=0)S.data.eventTypes.splice(i,1);else S.data.eventTypes.push(s);}
