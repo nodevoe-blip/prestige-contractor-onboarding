@@ -92,6 +92,24 @@ const S = {
     bankName:'',accountType:'checking',routing:'',account:'',confirmAccount:''
   }
 };
+
+// Pre-fills from the query string when arriving from another Prestige app
+// (e.g. an admin clicking "Start Onboarding" on a hired job applicant) --
+// none of these are required to be present, and any missing/blank ones
+// just leave the field's normal empty default in place. applicationId
+// isn't a form field itself (nothing here reads it back yet), so it's
+// kept on S directly and only threaded into the submission payload's
+// _meta below, for later reconciliation between the two systems.
+(function seedFromQuery(){
+  const qp = new URLSearchParams(location.search);
+  ['firstName','lastName','email','phone'].forEach(function(key){
+    const v = qp.get(key);
+    if(v) S.data[key] = v;
+  });
+  const applicationId = qp.get('applicationId');
+  if(applicationId) S.applicationId = applicationId;
+})();
+
 const STEPS = ['Account','ID & Tax','Banking'];
 
 function renderProgress(){
@@ -266,7 +284,7 @@ function submitForm(){
 async function doSubmit(){
   S.uploadState='uploading';render();
   const payload={
-    _meta:{form:'Prestige Contractor Onboarding',submitted:new Date().toISOString(),version:'1.0'},
+    _meta:{form:'Prestige Contractor Onboarding',submitted:new Date().toISOString(),version:'1.0',...(S.applicationId?{applicationId:S.applicationId}:{})},
     personal:{firstName:S.data.firstName,lastName:S.data.lastName,email:S.data.email,phone:S.data.phone,altPhone:S.data.altPhone},
     address:{street:S.data.address,city:S.data.city,state:S.data.state,zip:S.data.zip},
     identification:{dob:S.data.dob,ssn:S.data.ssn},
