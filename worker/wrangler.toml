@@ -1,0 +1,12 @@
+name = "prestige-contractor-onboarding"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+# Set with: npx wrangler secret put ONBOARDING_LINK_SECRET
+#           npx wrangler secret put ALLOWED_ORIGIN
+#           npx wrangler secret put TENANT_ID
+#           npx wrangler secret put CLIENT_ID
+#           npx wrangler secret put CLIENT_SECRET
+#           npx wrangler secret put SEND_AS_USER
+#           npx wrangler secret put NOTIFY_EMAIL
+# See README.md for which existing values to reuse for each.

@@ -75,39 +75,60 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 </div>
 
 <div class="page">
+  <!-- Honeypot: invisible to a real person, filled in by most bots that
+       auto-fill every input they find. Never shown, never styled to look
+       like a real field. -->
+  <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+    <label for="website">Website</label>
+    <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+  </div>
   <div class="progress-wrap" id="progressWrap"></div>
   <div id="formCard"></div>
 </div>
 
 <script>
-// ══ WORKER URL — update after deploying to Cloudflare ══
-const WORKER_URL = 'https://snowy-waterfall-4ad5.devoeconsults.workers.dev';
+const WORKER_URL = 'https://prestige-contractor-onboarding.devoeconsults.workers.dev';
 
 const S = {
-  step:0, errors:{}, uploadState:null, uploadError:null,
+  step:0, errors:{}, uploadState:null, uploadError:null, token:null,
+  startedAt: Date.now(),
   data:{
     firstName:'',lastName:'',email:'',phone:'',altPhone:'',
     address:'',city:'',state:'',zip:'',
     dob:'',ssn:'',services:[],eventTypes:[],yearBegan:'',eventsServiced:'',
-    bankName:'',accountType:'checking',routing:'',account:'',confirmAccount:''
+    bankName:'',accountType:'checking',routing:'',account:'',confirmAccount:'',
+    // Honeypot -- a real applicant never sees or fills this (hidden via
+    // CSS below); a bot filling every field it finds trips it instantly.
+    website:''
   }
 };
 
-// Pre-fills from the query string when arriving from another Prestige app
-// (e.g. an admin clicking "Start Onboarding" on a hired job applicant) --
-// none of these are required to be present, and any missing/blank ones
-// just leave the field's normal empty default in place. applicationId
-// isn't a form field itself (nothing here reads it back yet), so it's
-// kept on S directly and only threaded into the submission payload's
-// _meta below, for later reconciliation between the two systems.
-(function seedFromQuery(){
+// The ONLY thing read from the query string now is the signed token an
+// Applications admin generated for this specific hire -- no name/email/
+// phone travels in the URL anymore (that used to mean anyone's browser
+// history, or any link shared around, carried another person's contact
+// info). This page can't verify the token's signature itself (that would
+// need the signing secret in client-side JS, which defeats the point) --
+// it only decodes the payload to prefill the form for convenience. The
+// Worker verifies the real signature server-side before accepting any
+// submission; without a valid token it rejects outright, regardless of
+// what this page sends.
+(function seedFromToken(){
   const qp = new URLSearchParams(location.search);
-  ['firstName','lastName','email','phone'].forEach(function(key){
-    const v = qp.get(key);
-    if(v) S.data[key] = v;
-  });
-  const applicationId = qp.get('applicationId');
-  if(applicationId) S.applicationId = applicationId;
+  const token = qp.get('token');
+  if(!token) return;
+  S.token = token;
+  try{
+    const payloadB64 = token.split('.')[1];
+    const json = JSON.parse(atob(payloadB64.replace(/-/g,'+').replace(/_/g,'/')));
+    ['firstName','lastName','email','phone'].forEach(function(key){
+      if(json[key]) S.data[key] = json[key];
+    });
+    if(json.applicationId) S.applicationId = json.applicationId;
+  }catch(e){
+    // Malformed/undecodable token -- leave the form blank rather than
+    // fail the page. The Worker will reject the submission either way.
+  }
 })();
 
 const STEPS = ['Account','ID & Tax','Banking'];
@@ -138,6 +159,31 @@ function sel(id,label,opts){
     </select>
   </div>`;
 }
+// For SSN/bank fields: masked by default (type=password) with a Show/Hide
+// toggle, and every autofill-suppression attribute browsers and the
+// common password managers respect -- this data has no business being
+// cached in a browser's form-autofill history or offered to "save" on
+// some unrelated site later just because a field looked like a password.
+function inpMasked(id,label,ph,hint,extra){
+  const v=(S.data[id]||'').replace(/"/g,'&quot;');
+  const e=S.errors[id];
+  const btnId=id+'Toggle';
+  return `<div class="field">
+    <label class="label" for="${id}">${label} <span>*</span></label>
+    <div style="position:relative">
+      <input class="input${e?' err':''}" id="${id}" type="password" placeholder="${ph}" value="${v}" style="padding-right:54px" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore ${extra||''}>
+      <button type="button" id="${btnId}" onclick="toggleReveal('${id}','${btnId}')" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:var(--steel);background:none;border:none;cursor:pointer;padding:4px 6px">Show</button>
+    </div>
+    ${e?`<div class="hint err">${e}</div>`:hint?`<div class="hint">${hint}</div>`:''}
+  </div>`;
+}
+function toggleReveal(id,btnId){
+  const el=document.getElementById(id);
+  const btn=document.getElementById(btnId);
+  const showing=el.type==='text';
+  el.type=showing?'password':'text';
+  btn.textContent=showing?'Show':'Hide';
+}
 
 function renderStep0(){return `
   <div class="eyebrow">Step 1 of 3</div>
@@ -164,13 +210,9 @@ function renderStep1(){
       <input class="input${S.errors.dob?' err':''}" id="dob" type="text" placeholder="MM/DD/YYYY" value="${S.data.dob}" maxlength="10">
       ${S.errors.dob?`<div class="hint err">${S.errors.dob}</div>`:''}
     </div>
-    <div class="field">
-      <label class="label" for="ssn">Social Security Number <span>*</span></label>
-      <input class="input${S.errors.ssn?' err':''}" id="ssn" type="text" inputmode="numeric" placeholder="XXX-XX-XXXX" value="${S.data.ssn}" maxlength="11" oninput="formatSSN(this)">
-      ${S.errors.ssn?`<div class="hint err">${S.errors.ssn}</div>`:''}
-    </div>
+    ${inpMasked('ssn','Social Security Number','XXX-XX-XXXX','','inputmode="numeric" maxlength="11" oninput="formatSSN(this)"')}
   </div>
-  <div class="note-box">🔒 Your SSN and DOB are used solely for tax reporting and identity verification. Submitted securely and not stored in this app.</div>
+  <div class="note-box">🔒 Your SSN and DOB are used solely for tax reporting and identity verification, sent directly to Prestige. This onboarding link was generated for you specifically and expires a few days after it's sent.</div>
   <div class="section-bar" style="margin-top:6px">Experience</div>
   <div class="row2">
     ${inp('yearBegan','Year began profession','text','e.g. 2018','',false)}
@@ -192,8 +234,8 @@ function renderStep2(){return `
   <div class="section-bar">Banking Information</div>
   ${inp('bankName','Bank name','text','e.g. Chase, Fifth Third')}
   ${sel('accountType','Account type',[{v:'checking',l:'Checking'},{v:'savings',l:'Savings'}])}
-  ${inp('routing','Routing number','text','9-digit number','Found at the bottom-left of a check',true,'maxlength="9"')}
-  <div class="row2">${inp('account','Account number','text','Account number')}${inp('confirmAccount','Confirm account number','text','Re-enter')}</div>
+  ${inpMasked('routing','Routing number','9-digit number','Found at the bottom-left of a check','inputmode="numeric" maxlength="9"')}
+  <div class="row2">${inpMasked('account','Account number','Account number','','inputmode="numeric"')}${inpMasked('confirmAccount','Confirm account number','Re-enter','','inputmode="numeric"')}</div>
   <div class="note-box">📎 Attaching a voided check is the easiest way to confirm your routing and account numbers.</div>`;}
 
 function renderSuccess(){
@@ -210,7 +252,7 @@ function renderSuccess(){
     <div class="icon ${iconCls}">${icon}</div>
     <div class="card-title" style="margin-bottom:8px">${title}</div>
     <p style="font-size:13px;color:var(--gray-600);line-height:1.6;margin-bottom:8px">${desc}</p>
-    ${st==='uploading'?`<div class="status-box status-uploading"><span class="spinner"></span>Uploading to OneDrive and sending notification email…</div>`:''}
+    ${st==='uploading'?`<div class="status-box status-uploading"><span class="spinner"></span>Sending your submission to Prestige…</div>`:''}
     ${st==='error'?`<div class="status-box status-error">Error: ${S.uploadError||'Unknown error'}<br><button class="btn btn-ghost" style="margin-top:10px;font-size:12px" onclick="doSubmit()">↩ Retry</button></div>`:''}
     ${st==='success'?`<button class="btn btn-ghost" style="margin-top:20px" onclick="location.reload()">Start a new submission</button>`:''}
   </div>`;}
@@ -232,7 +274,8 @@ function render(){
 
 function readInputs(){
   ['firstName','lastName','email','phone','altPhone','address','city','state','zip',
-   'dob','ssn','yearBegan','eventsServiced','bankName','accountType','routing','account','confirmAccount'].forEach(id=>{
+   'dob','ssn','yearBegan','eventsServiced','bankName','accountType','routing','account','confirmAccount',
+   'website'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)S.data[id]=el.value.trim();
   });
@@ -282,9 +325,15 @@ function submitForm(){
 }
 
 async function doSubmit(){
+  if(!S.token){
+    S.uploadState='error';S.uploadError='No onboarding link token found. Ask Prestige to resend your onboarding link.';render();
+    return;
+  }
   S.uploadState='uploading';render();
   const payload={
-    _meta:{form:'Prestige Contractor Onboarding',submitted:new Date().toISOString(),version:'1.0',...(S.applicationId?{applicationId:S.applicationId}:{})},
+    token:S.token,
+    honeypot:S.data.website,
+    startedAt:S.startedAt,
     personal:{firstName:S.data.firstName,lastName:S.data.lastName,email:S.data.email,phone:S.data.phone,altPhone:S.data.altPhone},
     address:{street:S.data.address,city:S.data.city,state:S.data.state,zip:S.data.zip},
     identification:{dob:S.data.dob,ssn:S.data.ssn},
